@@ -23,7 +23,21 @@ const isMonacoSupported = (() => {
 
 let monacoInstance: Monaco | null = null;
 if (isMonacoSupported) {
-  loader.init().then(mi => monacoInstance = mi);
+  loader.init().then(mi => {
+    monacoInstance = mi;
+    monacoInstance.editor.defineTheme('openscad-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#1e1e1e',
+        'editor.foreground': '#d4d4d4',
+        'editor.lineHighlightBackground': '#2a2a2a',
+        'editorCursor.foreground': '#9cdcfe',
+        'editor.selectionBackground': '#264f78',
+      },
+    });
+  });
 }
 
 export default function EditorPanel({className, style}: {className?: string, style?: CSSProperties}) {
@@ -168,6 +182,7 @@ export default function EditorPanel({className, style}: {className?: string, sty
           <Editor
             className="openscad-editor absolute-fill"
             defaultLanguage="openscad"
+            theme="openscad-dark"
             path={state.params.activePath}
             value={model.source}
             onChange={s => model.source = s ?? ''}
