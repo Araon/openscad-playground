@@ -1,6 +1,6 @@
 // Portions of this file are Copyright 2021 Google LLC, and licensed under GPL2+. See COPYING.
 
-import React, { CSSProperties, useEffect, useState } from 'react';
+import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
 import {MultiLayoutComponentId, State, StatePersister} from '../state/app-state'
 import { Model } from '../state/model';
 import EditorPanel from './EditorPanel';
@@ -10,6 +10,8 @@ import { ModelContext, FSContext } from './contexts';
 import PanelSwitcher from './PanelSwitcher';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import CustomizerPanel from './CustomizerPanel';
+import { ErrorBoundary } from './ErrorBoundary';
+import JSZip from 'jszip';
 
 
 export function App({initialState, statePersister, fs}: {initialState: State, statePersister: StatePersister, fs: FS}) {
@@ -35,6 +37,25 @@ export function App({initialState, statePersister, fs}: {initialState: State, st
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    for (const file of files) {
+      if (file.name.endsWith('.zip')) {
+        await model.addZipFile(file);
+      } else if (file.name.endsWith('.scad') || file.name.endsWith('.stl') || file.name.endsWith('.off')) {
+        await model.addFile(file);
+      }
+    }
+  }, [model]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   }, []);
 
   const zIndexOfPanelsDependingOnFocus = {
@@ -74,37 +95,42 @@ export function App({initialState, statePersister, fs}: {initialState: State, st
   }
 
   return (
-    <ModelContext.Provider value={model}>
-      <FSContext.Provider value={fs}>
-        <div className='flex flex-column' style={{
-            flex: 1,
-          }}>
-          
-          <PanelSwitcher />
-    
-          <div className={mode === 'multi' ? 'flex flex-row' : 'flex flex-column'}
-              style={mode === 'multi' ? {flex: 1} : {
-                flex: 1,
-                position: 'relative'
-              }}>
+    <ErrorBoundary>
+      <ModelContext.Provider value={model}>
+        <FSContext.Provider value={fs}>
+          <div 
+            className='flex flex-column' 
+            style={{ flex: 1 }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          >
+            
+            <PanelSwitcher />
+      
+            <div className={mode === 'multi' ? 'flex flex-row' : 'flex flex-column'}
+                style={mode === 'multi' ? {flex: 1} : {
+                  flex: 1,
+                  position: 'relative'
+                }}>
 
-            <EditorPanel className={`
-              opacity-animated
-              ${layout.mode === 'single' && layout.focus !== 'editor' ? 'opacity-0' : ''}
-              ${layout.mode === 'single' ? 'absolute-fill' : ''}
-            `} style={getPanelStyle('editor')} />
-            <ViewerPanel className={layout.mode === 'single' ? `absolute-fill` : ''} style={getPanelStyle('viewer')} />
-            <CustomizerPanel className={`
-              opacity-animated
-              ${layout.mode === 'single' && layout.focus !== 'customizer' ? 'opacity-0' : ''}
-              ${layout.mode === 'single' ? `absolute-fill` : ''}
-            `} style={getPanelStyle('customizer')} />
+              <EditorPanel className={`
+                opacity-animated
+                ${layout.mode === 'single' && layout.focus !== 'editor' ? 'opacity-0' : ''}
+                ${layout.mode === 'single' ? 'absolute-fill' : ''}
+              `} style={getPanelStyle('editor')} />
+              <ViewerPanel className={layout.mode === 'single' ? `absolute-fill` : ''} style={getPanelStyle('viewer')} />
+              <CustomizerPanel className={`
+                opacity-animated
+                ${layout.mode === 'single' && layout.focus !== 'customizer' ? 'opacity-0' : ''}
+                ${layout.mode === 'single' ? `absolute-fill` : ''}
+              `} style={getPanelStyle('customizer')} />
+            </div>
+
+            <Footer />
+            <ConfirmDialog />
           </div>
-
-          <Footer />
-          <ConfirmDialog />
-        </div>
-      </FSContext.Provider>
-    </ModelContext.Provider>
+        </FSContext.Provider>
+      </ModelContext.Provider>
+    </ErrorBoundary>
   );
 }

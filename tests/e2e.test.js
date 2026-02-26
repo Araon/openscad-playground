@@ -155,5 +155,68 @@ describe('e2e', () => {
     await page.waitForSelector('fieldset');
     await waitForLabel('myVar');
   }, longTimeout);
+
+  test('use module definition', async () => {
+    await loadSrc(`
+      module box(size) {
+        cube(size, center=true);
+      }
+      box([10, 20, 30]);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('use function', async () => {
+    await loadSrc(`
+      function add(a, b) = a + b;
+      cube([add(5, 5), 10, 10]);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('render polyhedron', async () => {
+    await loadSrc(`
+      polyhedron(
+        points=[[0,0,0],[10,0,0],[10,10,0],[0,10,0],[0,0,10],[10,0,10],[10,10,10],[0,10,10]],
+        faces=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]]
+      );
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('use translate transformation', async () => {
+    await loadSrc(`
+      translate([10, 20, 30]) cube(10);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('use rotate transformation', async () => {
+    await loadSrc(`
+      rotate([45, 45, 0]) cube(10);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('use scale transformation', async () => {
+    await loadSrc(`
+      scale([2, 1, 0.5]) cube(10);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
+
+  test('use linear_extrude', async () => {
+    await loadSrc(`
+      linear_extrude(height=10) circle(r=10);
+    `);
+    await waitForViewer();
+    expect3DPolySet();
+  }, longTimeout);
 });
 

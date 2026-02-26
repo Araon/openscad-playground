@@ -9,6 +9,10 @@ type Geom = {
 };
 
 function createPrimitive(doc: Document, baseColorFactor: Color, {positions, indices, colors}: Geom): Primitive {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const posArray: any = positions;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const idxArray: any = indices;
     const prim = doc.createPrimitive()
         .setMode(Primitive.Mode.TRIANGLES)
         .setMaterial(
@@ -21,16 +25,18 @@ function createPrimitive(doc: Document, baseColorFactor: Color, {positions, indi
         .setAttribute('POSITION',
             doc.createAccessor()
                 .setType(Accessor.Type.VEC3)
-                .setArray(positions))
+                .setArray(posArray))
         .setIndices(
             doc.createAccessor()
                 .setType(Accessor.Type.SCALAR)
-                .setArray(indices));
+                .setArray(idxArray));
     if (colors) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const colArray: any = colors;
         prim.setAttribute('COLOR_0',
             doc.createAccessor()
                 .setType(Accessor.Type.VEC3)
-                .setArray(colors));
+                .setArray(colArray));
     }
     return prim;
 }

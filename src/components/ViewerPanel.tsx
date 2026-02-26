@@ -5,10 +5,13 @@ import { ModelContext } from './contexts.ts';
 import { Toast } from 'primereact/toast';
 import { blurHashToImage, imageToBlurhash, imageToThumbhash, thumbHashToImage } from '../io/image_hashes.ts';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ModelViewerElement = any;
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "model-viewer": any;
+      "model-viewer": ModelViewerElement;
     }
   }
 }
@@ -56,8 +59,8 @@ export default function ViewerPanel({className, style}: {className?: string, sty
 
   const state = model.state;
   const [interactionPrompt, setInteractionPrompt] = useState('auto');
-  const modelViewerRef = useRef<any>();
-  const axesViewerRef = useRef<any>();
+  const modelViewerRef = useRef<ModelViewerElement | null>(null);
+  const axesViewerRef = useRef<ModelViewerElement | null>(null);
   const toastRef = useRef<Toast>(null);
 
   const [loadedUri, setLoadedUri] = useState<string | undefined>();
@@ -82,9 +85,9 @@ export default function ViewerPanel({className, style}: {className?: string, sty
     setCachedImageHash(undefined);
   }
 
-  const onLoad = useCallback(async (e: any) => {
+  const onLoad = useCallback(async (_e: Event) => {
     setLoadedUri(modelUri);
-    console.log('onLoad', e);
+    console.log('onLoad', _e);
 
     if (!modelViewerRef.current) return;
 
@@ -110,7 +113,7 @@ export default function ViewerPanel({className, style}: {className?: string, sty
     useEffect(() => {
       if (!ref.current) return;
 
-      function handleCameraChange(e: any) {
+      function handleCameraChange(e: CustomEvent) {
         if (!otherRef.current) return;
         if (e.detail.source === 'user-interaction') {
           const cameraOrbit = ref.current.getCameraOrbit();

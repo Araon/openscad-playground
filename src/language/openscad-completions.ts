@@ -280,9 +280,9 @@ export async function buildOpenSCADCompletionItemProvider(fs: FS, workingDir: st
         const allWithoutComments = stripComments(text);
         
         const named: [string, CompletionItem][] = [
-          ...mapObject(parsed.functions ?? {},
+          ...(mapObject(parsed.functions ?? {},
             (name, mod) => [name, makeFunctionoidSuggestion(name, mod)],
-            name => name.indexOf(word) >= 0)
+            name => name.indexOf(word) >= 0) as [string, CompletionItem][])
         ];
         named.sort(([a], [b]) => a.indexOf(word) - b.indexOf(word));
         // const suggestions = names.map(name => ({
