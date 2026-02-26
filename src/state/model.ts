@@ -308,9 +308,8 @@ export class Model {
 
   async saveProject() {
     if (this.state.params.sources.length == 1) {
-      const content = this.state.params.sources[0].content;
-      const contentBytes = new TextEncoder().encode(content);
-      const blob = new Blob([contentBytes], {type: 'text/plain'});
+      const content = this.state.params.sources[0].content ?? '';
+      const blob = new Blob([content], {type: 'text/plain'});
       const file = new File([blob], this.state.params.activePath.split('/').pop()!);
       downloadUrl(URL.createObjectURL(file), file.name);
     } else {
@@ -326,6 +325,37 @@ export class Model {
         const file = new File([blob], 'project.zip');
         downloadUrl(URL.createObjectURL(file), file.name);
       });
+    }
+  }
+
+  async addFile(file: File) {
+    const fileName = `/home/${file.name}`;
+    const content = await file.text();
+    this.mutate(s => {
+      s.params.sources = [...s.params.sources, { path: fileName, content }];
+      s.params.activePath = fileName;
+    });
+    this.processSource();
+  }
+
+  async addZipFile(file: File) {
+    const zip = new JSZip();
+    const zipData = await zip.loadAsync(file);
+    const sources: { path: string; content?: string; url?: string }[] = [];
+    
+    for (const [path, entry] of Object.entries(zipData.files)) {
+      if (!entry.dir && (path.endsWith('.scad') || path.endsWith('.stl') || path.endsWith('.off'))) {
+        const content = await entry.async('string');
+        sources.push({ path: `/home/${path}`, content });
+      }
+    }
+    
+    if (sources.length > 0) {
+      this.mutate(s => {
+        s.params.sources = [...s.params.sources, ...sources];
+        s.params.activePath = sources[0].path;
+      });
+      this.processSource();
     }
   }
 

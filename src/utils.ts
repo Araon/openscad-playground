@@ -2,7 +2,7 @@
 
 import { Source } from "./state/app-state.ts";
 
-export function mapObject(o: any, f: (key: string, value: any) => any, ifPred: (key: string) => boolean) {
+export function mapObject<T>(o: Record<string, T>, f: (key: string, value: T) => unknown, ifPred?: (key: string) => boolean): unknown[] {
   const ret = [];
   for (const key of Object.keys(o)) {
     if (ifPred && !ifPred(key)) {
@@ -15,7 +15,7 @@ export function mapObject(o: any, f: (key: string, value: any) => any, ifPred: (
 
 type Killer = () => void;
 export type AbortablePromise<T> = Promise<T> & {kill: Killer}
-export function AbortablePromise<T>(f: (resolve: (result: T) => void, reject: (error: any) => void) => Killer): AbortablePromise<T>
+export function AbortablePromise<T>(f: (resolve: (result: T) => void, reject: (error: unknown) => void) => Killer): AbortablePromise<T>
 {
   let kill: Killer;
   const promise = new Promise<T>((res, rej) => {
